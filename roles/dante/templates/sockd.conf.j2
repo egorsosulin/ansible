@@ -1,0 +1,18 @@
+debug: 0
+logoutput: stderr
+internal: {{ dante_internal_ip }} port = {{ dante_internal_port }}
+external: {{ dante_external_interface }}
+socksmethod: {{ dante_socketmethod }}
+clientmethod: {{ dante_clientmethod }}
+user.privileged: {{ dante_privileged_user }}
+user.unprivileged: {{ dante_unprivileged_user }}
+
+client pass {
+    from: {{ dante_client_allow_subnet }} port 1-65535 to: 0.0.0.0/0
+    log: error
+}
+
+socks pass {
+    from: {{ dante_client_allow_subnet }} to: 0.0.0.0/0
+    log: error
+}

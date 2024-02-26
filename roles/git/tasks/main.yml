@@ -1,0 +1,30 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+
+- name: Install git package
+  ansible.builtin.package:
+    state: present
+    name:
+      - git
+      - git-lfs
+      - git-crypt
+
+- name: Copy git config file
+  ansible.builtin.copy:
+    src: gitconfig
+    dest: "/home/{{ user }}/.gitconfig"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0644"
+
+- name: Copy git credentials file
+  ansible.builtin.copy:
+    src: git-credentials
+    dest: "/home/{{ user }}/.git-credentials"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0600"

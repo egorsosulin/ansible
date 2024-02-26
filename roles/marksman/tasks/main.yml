@@ -1,0 +1,24 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_home is defined
+      - marksman_version is defined
+      - marksman_binary_url is defined
+      - marksman_binary_file is defined
+      
+- name: Download marksman binary
+  become_user: '{{ user }}'
+  ansible.builtin.shell:
+    cmd: "wget {{ marksman_binary_url }} -O {{ marksman_binary_file }}"
+    creates: "{{ marksman_binary_file }}"
+
+- name: Set marksman binary executable
+  ansible.builtin.file:
+    path: "{{ marksman_binary_file }}"
+    state: file
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0755"

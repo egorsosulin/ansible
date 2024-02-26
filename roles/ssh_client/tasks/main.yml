@@ -1,0 +1,55 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_home is defined
+      - ssh_client_known_hosts is defined
+      - ssh_client_authorized_keys is defined
+
+- name: Create ssh directory
+  ansible.builtin.file:
+    path: "{{ user_home }}/.ssh"
+    state: directory
+    mode: "0700"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+
+- name: Copy ssh id_rsa files
+  ansible.builtin.copy:
+    src: "ssh/users/{{ user }}/{{ data.file }}"
+    dest: "{{ user_home }}/.ssh/{{ data.file }}"
+    mode: "{{ data.mode }}"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+  loop:
+    - {file: 'id_rsa', mode: '0600'}
+    - {file: 'id_rsa.pub', mode: '0644'}
+  loop_control:
+    loop_var: data
+
+- name: Add authorized keys
+  ansible.posix.authorized_key:
+    user: "{{ user }}"
+    state: present
+    key: "{{ lookup('file', 'ssh/users/{{ user }}/id_rsa.pub') }}"
+  loop: "{{ ssh_client_authorized_keys | list }}"
+
+# - name: Create known hosts file
+#   ansible.builtin.file:
+#     path: "{{ user_home }}/.ssh/known_hosts"
+#     state: touch
+#     mode: "0600"
+#     owner: "{{ user }}"
+#     group: "{{ user }}"
+
+- name: Include knownhosts task for each crypto type
+  ansible.builtin.include_tasks:
+    file: known_hosts.yml
+  loop:
+    - rsa
+    - ecdsa
+    - ed25519
+  loop_control:
+    loop_var: crypto

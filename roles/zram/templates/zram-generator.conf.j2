@@ -1,0 +1,5 @@
+{%for item in zram%}
+[{{ item.name }}]
+zram-size = {{ item.size }}
+compression-algorithm = {{ item.compress }}
+{%endfor%}

@@ -1,0 +1,19 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - packages_install is defined
+      - packages_remove is defined
+
+- name: Install packages
+  ansible.builtin.package:
+    state: present
+    name: "{{ item }}"
+  loop: "{{ packages_install | list }}"
+
+- name: Remove packages
+  ansible.builtin.package:
+    state: absent
+    name: "{{ item }}"
+  loop: "{{ packages_remove | list }}"

@@ -1,0 +1,4 @@
+---
+
+user_fonts_dir: "{{ user_home }}/.local/share/fonts"
+nerd_fonts_url_prefix: "https://github.com/ryanoasis/nerd-fonts/releases/download"

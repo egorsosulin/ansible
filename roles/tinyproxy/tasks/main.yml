@@ -1,0 +1,30 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - systemd_services_disabled is defined
+      - tinyproxy_allow_subnet is defined
+      - tinyproxy_listen_port is defined
+      - tinyproxy_listen_ip is defined
+      - tinyproxy_bind_ip is defined
+
+- name: Install tinyproxy package
+  ansible.builtin.package:
+    state: present
+    name: tinyproxy
+
+- name: Create tinyproxy config
+  ansible.builtin.template:
+    src: tinyproxy.conf.j2
+    dest: /etc/tinyproxy/tinyproxy.conf
+    owner: root
+    group: root
+    mode: "0640"
+  notify: Restart tinyproxy service
+
+- name: Enable systemd tinyproxy service
+  ansible.builtin.systemd:
+    name: tinyproxy.service
+    state: started
+    enabled: true

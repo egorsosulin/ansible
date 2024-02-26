@@ -1,0 +1,48 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+
+- name: Install mpv package
+  ansible.builtin.package:
+    state: present
+    name: mpv
+
+- name: Create mpv config directory
+  ansible.builtin.file:
+    path: "/home/{{ user }}/.config/mpv"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0700"
+
+- name: Copy default config to user directory
+  ansible.builtin.command:
+    cmd: "cp /usr/share/doc/mpv/mpv.conf /home/{{ user }}/.config/mpv/mpv.conf"
+    creates: "/home/{{ user }}/.config/mpv/mpv.conf"
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Copy default config to user directory
+  ansible.builtin.shell:
+    cmd: "zcat /usr/share/doc/mpv/mpv.conf.gz > /home/{{ user }}/.config/mpv/mpv.conf"
+    creates: "/home/{{ user }}/.config/mpv/mpv.conf"
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Set user permissions to config file
+  ansible.builtin.file:
+    path: "/home/{{ user }}/.config/mpv/mpv.conf"
+    state: file
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0644"
+
+- name: Enable fullscreen mode by default
+  ansible.builtin.lineinfile:
+    path: "/home/{{ user }}/.config/mpv/mpv.conf"
+    regexp: "fs="
+    line: "fs=yes"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0644"

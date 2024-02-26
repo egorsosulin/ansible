@@ -1,0 +1,28 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - networkmanager_manage_wireguard is defined
+      - networkmanager_enabled is defined
+
+- name: Create NetworkManager config for unmanage Wireguard
+  ansible.builtin.copy:
+    src: unmanage_wireguard.conf
+    dest: '{{ networkmanager_config_dir }}/unmanage_wireguard.conf'
+    owner: root
+    group: root
+    mode: '0644'
+  when: networkmanager_manage_wireguard is false
+
+- name: Disable NetworkManager service
+  ansible.builtin.systemd:
+    name: "{{ service }}"
+    state: stopped
+    enabled: false
+  loop:
+    - NetworkManager.service
+    - NetworkManager-wait-online.service
+  loop_control:
+        loop_var: service
+  when: 'networkmanager_enabled == false'

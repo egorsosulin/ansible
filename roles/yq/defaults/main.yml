@@ -1,0 +1,4 @@
+---
+yq_version: "v4.40.3"
+yq_binary_url: "https://github.com/mikefarah/yq/releases/download/{{ yq_version }}/yq_linux_amd64"
+yq_binary_file: "{{ user_home }}/.bin/yq"

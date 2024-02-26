@@ -1,0 +1,16 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - zram is defined
+      - zram | length > 0
+      - ansible_facts['os_family'] == "RedHat"
+
+- name: Create config file
+  ansible.builtin.template:
+    src: zram-generator.conf.j2
+    dest: /etc/systemd/zram-generator.conf
+    owner: root
+    group: root
+    mode: "0644"

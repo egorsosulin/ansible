@@ -1,0 +1,7 @@
+---
+
+- name: Enable fstrim systemd timer
+  ansible.builtin.systemd:
+    name: fstrim.timer
+    state: started
+    enabled: yes

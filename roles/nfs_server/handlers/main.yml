@@ -1,0 +1,5 @@
+---
+
+- name: Update NFS server exports
+  ansible.builtin.command:
+    cmd: 'exportfs -a'

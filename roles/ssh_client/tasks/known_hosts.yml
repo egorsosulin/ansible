@@ -1,0 +1,11 @@
+---
+
+- name: Add pub keys to known hosts
+  ansible.builtin.known_hosts:
+    name: "{{ host }}"
+    key: "{{ host }} {{ lookup('file', 'ssh/hosts/{{ host }}/ssh_host_{{ crypto }}_key.pub') }}"
+    path: "{{ user_home }}/.ssh/known_hosts"
+    state: present
+  loop: "{{ ssh_client_known_hosts | list }}"
+  loop_control:
+    loop_var: host

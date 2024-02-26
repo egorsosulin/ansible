@@ -1,0 +1,7 @@
+---
+
+- name: Update fonts cache
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.command:
+    cmd: "fc-cache"

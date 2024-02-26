@@ -1,0 +1,38 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - slack_wayland_fix is defined
+
+- name: Create user desktop-file apps dir
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: '0700'
+  loop:
+    - "/home/{{ user }}/.local"
+    - "/home/{{ user }}/.local/share"
+    - "/home/{{ user }}/.local/share/applications"
+  when: slack_wayland_fix is true
+
+- name: Copy Slack desktop file to user apps folder
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.command:
+    cmd: "cp /usr/share/applications/slack.desktop /home/{{ user }}/.local/share/applications/slack.desktop"
+    creates: "/home/{{ user }}/.local/share/applications/slack.desktop"
+  when: slack_wayland_fix is true
+
+- name: Fix Slack Wayland screenshare bug
+  ansible.builtin.lineinfile:
+    path: "/home/{{ user }}/.local/share/applications/slack.desktop"
+    regexp: "^Exec=/usr/bin/slack"
+    line: "Exec=/usr/bin/slack --enable-features=WebRTCPipeWireCapturer %U"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: '0644'
+  when: slack_wayland_fix is true

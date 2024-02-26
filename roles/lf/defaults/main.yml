@@ -1,0 +1,5 @@
+---
+lf_version: 'r31'
+lf_archive_url: "https://github.com/gokcehan/lf/releases/download/{{ lf_version }}/lf-linux-amd64.tar.gz"
+lf_binary_file: "{{ user_home }}/.bin/lf"
+

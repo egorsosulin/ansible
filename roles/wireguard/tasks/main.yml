@@ -1,0 +1,29 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - wireguard_interface_name is defined
+      - wireguard_interface_address is defined
+      - wireguard_interface_private_key is defined
+
+- name: Install wireguard package
+  ansible.builtin.package:
+    state: present
+    name:
+      - wireguard-tools
+
+- name: Create wireguard config file
+  ansible.builtin.template:
+    src: "wireguard.conf.j2"
+    dest: "{{ wireguard_config_file }}"
+    mode: "0600"
+    owner: root
+    group: root
+  notify: Restart wireguard service
+
+- name: Enable wireguard systemd service
+  ansible.builtin.systemd:
+    name: "{{ wireguard_systemd_service }}"
+    state: started
+    enabled: true

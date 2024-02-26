@@ -1,0 +1,14 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - sysctl is defined
+      - sysctl | length > 0
+
+- name: Apply settings
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+  loop: "{{ sysctl | list }}"

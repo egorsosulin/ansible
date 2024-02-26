@@ -1,0 +1,14 @@
+[Unit]
+Description=Starts user specific ydotoold service
+
+[Service]
+Type=simple
+Restart=always
+User={{ user }}
+ExecStart=/usr/bin/ydotoold --socket-path=/run/user/{{ user_uid }}/.ydotool_socket --socket-own={{ user_uid }}:{{ user_gid }}
+ExecReload=/usr/bin/kill -HUP $MAINPID
+KillMode=process
+TimeoutSec=180
+
+[Install]
+WantedBy=default.target

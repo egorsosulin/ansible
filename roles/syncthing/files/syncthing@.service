@@ -1,0 +1,12 @@
+[Unit]
+Description=Syncthing Daemon
+After=network.target
+
+[Service]
+User=%i
+Type=simple
+Restart=always
+ExecStart=/usr/bin/syncthing -no-browser
+
+[Install]
+WantedBy=multi-user.target

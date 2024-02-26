@@ -1,0 +1,45 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+
+- name: Install antimicrox package
+  ansible.builtin.package:
+    state: present
+    name:
+      - antimicrox
+
+- name: "Create antimicrox config dir"
+  ansible.builtin.file:
+    path: "/home/{{ user }}/.config/antimicrox"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: '0755'
+
+- name: "Clone antimicrox profiles repo"
+  become_user: "{{ user }}"
+  ansible.builtin.git:
+    repo: 'http://server:3003/GiteaUser/antimicro_profiles.git'
+    dest: "/home/{{ user }}/.config/antimicrox/profiles"
+    clone: true
+    force: true
+    version: master
+
+- name: "Copy antimicrox original config"
+  ansible.builtin.template:
+    src: antimicrox_settings.ini.j2
+    dest: "/home/{{ user }}/.config/antimicrox/antimicrox_settings.ini.original"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: '0644'
+
+- name: "Swap antimicrox config"
+  become_user: "{{ user }}"
+  ansible.builtin.command:
+  args:
+    cmd: cp antimicrox_settings.ini.original antimicrox_settings.ini
+    chdir: "/home/{{ user }}/.config/antimicrox"
+    creates: "/home/{{ user }}/.config/antimicrox/antimicrox_settings.ini"

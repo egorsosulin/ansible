@@ -1,0 +1,17 @@
+---
+
+- name: Run Doom Emacs install
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.command:
+    cmd: "./doom install --force"
+  args:
+    chdir: "/home/{{ user }}/.emacs.d/bin"
+
+- name: Sync Doom Emacs config
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.command:
+    cmd: "./doom sync --force"
+  args:
+    chdir: "/home/{{ user }}/.emacs.d/bin"

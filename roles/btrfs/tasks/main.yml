@@ -1,0 +1,27 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - btrfs_scrub_mounts is defined
+
+- name: Install BTRFS required packages
+  ansible.builtin.package:
+    state: present
+    name:
+      - btrfsmaintenance
+
+- name: Set BTRFS scrub mount points
+  ansible.builtin.lineinfile:
+    path: /etc/sysconfig/btrfsmaintenance
+    regexp: '^BTRFS_SCRUB_MOUNTPOINTS='
+    line: 'BTRFS_SCRUB_MOUNTPOINTS="{{ btrfs_scrub_mounts }}"'
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable systemd BTRFS scrub timer
+  ansible.builtin.systemd:
+    name: btrfs-scrub.timer
+    state: started
+    enabled: true

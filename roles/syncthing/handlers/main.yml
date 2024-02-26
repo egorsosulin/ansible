@@ -1,0 +1,16 @@
+---
+
+- name: Run Syncthing meta script
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.command:
+    cmd: >-
+      syncthing_meta
+      --create-dirs
+      --meta-config {{ syncthing_meta_config }}
+
+- name: Restart Syncthing user service
+  ansible.builtin.systemd:
+    name: "syncthing@{{ user }}.service"
+    state: restarted
+    daemon_reload: true

@@ -1,0 +1,16 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['os_family'] == "Debian"
+
+- name: Set minimal grub menu timeout
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: "^GRUB_TIMEOUT="
+    line: "GRUB_TIMEOUT=1"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Update grub

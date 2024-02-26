@@ -1,0 +1,4 @@
+---
+marksman_version: '2023-11-29'
+marksman_binary_url: "https://github.com/artempyanykh/marksman/releases/download/{{ marksman_version }}/marksman-linux-x64"
+marksman_binary_file: "{{ user_home }}/.bin/marksman"

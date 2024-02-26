@@ -1,0 +1,64 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - gitea_url is defined
+      - gitea_login is defined
+      - gitea_repos_dir is defined
+
+- name: Install packages
+  ansible.builtin.package:
+    state: present
+    name:
+      - git
+
+- name: Get Gitea repos data
+  ansible.builtin.uri:
+    url: "{{ gitea_url }}/api/v1/repos/search?limit=200"
+    method: GET
+    force: true
+    return_content: true
+    status_code:
+      - 200
+  register: gitea_response
+
+- name: Create directory for Gitea repos
+  ansible.builtin.file:
+    path: "{{ gitea_repos_dir }}"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: '0755'
+
+- name: Clone each Gitea repo
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.git:
+    repo: "{{ item.clone_url }}"
+    dest: "{{ gitea_repos_dir }}/{{ item.name }}"
+    clone: true
+    force: false
+    update: false
+    version: "{{ item.default_branch }}"
+  loop: "{{ gitea_response | community.general.json_query('json.data') }}"
+
+- name: Copy systemd repo fetch service
+  ansible.builtin.template:
+    src: "git-fetch-@.{{ item }}.j2"
+    dest: "/etc/systemd/system/git-fetch-{{ user }}@.{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - service
+    - timer
+
+- name: Enable systemd repo fetch service
+  ansible.builtin.systemd:
+    name: "git-fetch-{{ user }}@{{ item.name }}.timer"
+    state: started
+    enabled: true
+    daemon_reload: true
+  loop: "{{ gitea_response | community.general.json_query('json.data') }}"

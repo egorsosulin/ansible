@@ -1,0 +1,9 @@
+[Unit]
+Description=Run fetch for git repo
+Documentation=man:git
+
+[Service]
+User=%j
+Type=oneshot
+WorkingDirectory={{ gitea_repos_dir }}/%i
+ExecStart=/usr/bin/git fetch --all

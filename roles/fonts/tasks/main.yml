@@ -1,0 +1,31 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_home is defined
+      - nerd_fonts_version is defined
+      - nerd_fonts_url_prefix is defined
+
+- name: Create user fonts directory
+  ansible.builtin.file:
+    path: "{{ user_fonts_dir }}"
+    state: directory
+    mode: "0755"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+
+- name: Install Nerd fonts
+  become_user: '{{ user }}'
+  ansible.builtin.shell:
+    cmd: >-
+      wget -O - {{ nerd_fonts_url_prefix }}/{{ nerd_fonts_version }}/{{ font_family }}.tar.xz
+      | tar -xJf - --wildcards '*.ttf'
+    creates: "{{ user_fonts_dir }}/{{ font_family }}NerdFont-Regular.ttf"
+    chdir: "{{ user_fonts_dir }}"
+  loop:
+    - Hack
+  loop_control:
+    loop_var: font_family
+  notify: Update fonts cache

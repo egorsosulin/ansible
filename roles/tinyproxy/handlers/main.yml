@@ -1,0 +1,5 @@
+---
+- name: Restart tinyproxy service
+  ansible.builtin.systemd:
+    name: tinyproxy.service
+    state: restarted

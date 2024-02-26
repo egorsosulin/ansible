@@ -1,0 +1,58 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_home is defined
+      - borgmatic_config_dir is defined
+      - borgmatic_config_file is defined
+      - borgbackup_name is defined
+      - borgbackup_repo is defined
+      - borgbackup_source is defined
+      - borgbackup_password is defined
+      - borgbackup_compression is defined
+
+- name: Install borgbackup package
+  ansible.builtin.package:
+    state: present
+    name:
+      - borgmatic
+
+- name: Create borgmatic config directory
+  ansible.builtin.file:
+    path: "{{ borgmatic_config_dir }}"
+    state: directory
+    mode: "0700"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+
+- name: Create borgmatic config file
+  ansible.builtin.template:
+    src: "borgmatic.yml.j2"
+    dest: "{{ borgmatic_config_file }}"
+    mode: "0600"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    validate: "/usr/bin/validate-borgmatic-config -c %s"
+  register: config_file
+
+- name: Copy borgmatic systemd files
+  ansible.builtin.copy:
+    src: "borgmatic-@.{{ extension }}"
+    dest: "/etc/systemd/system/borgmatic-{{ user }}@.{{ extension }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop_control:
+    loop_var: extension
+  loop:
+    - service
+    - timer
+
+- name: Enable borgmatic systemd timer
+  ansible.builtin.systemd:
+    name: "borgmatic-{{ user }}@{{ borgbackup_name }}.timer"
+    state: started
+    enabled: true
+    daemon_reload: true

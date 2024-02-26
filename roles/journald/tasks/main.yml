@@ -1,0 +1,22 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - journald_storage is defined
+      - journald_runtime_max_use is defined
+
+- name: Set journald settings
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/journald.conf
+    regexp: '^#?{{ param.name }}='
+    line: '{{ param.name }}={{ param.value }}'
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - {name: 'Storage', value: '{{ journald_storage }}'}
+    - {name: 'RuntimeMaxUse', value: '{{ journald_runtime_max_use }}'}
+  loop_control:
+    loop_var: param
+  notify: Reload Journald

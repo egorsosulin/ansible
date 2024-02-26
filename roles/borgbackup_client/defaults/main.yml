@@ -1,0 +1,6 @@
+---
+borgbackup_password: none
+borgbackup_compression: zstd
+
+borgmatic_config_dir: "{{ user_home }}/.config/borgmatic.d"
+borgmatic_config_file: "{{ borgmatic_config_dir }}/{{ borgbackup_name }}.yml"

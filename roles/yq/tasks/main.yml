@@ -1,0 +1,25 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_home is defined
+      - yq_version is defined
+      - yq_binary_url is defined
+      - yq_binary_file is defined
+
+- name: Download yq binary
+  become_user: '{{ user }}'
+  ansible.builtin.shell:
+    cmd: "wget {{ yq_binary_url }} -O yq"
+    chdir: "{{ yq_binary_file | dirname }}"
+    creates: "{{ yq_binary_file }}"
+
+- name: Set yq binary executable
+  ansible.builtin.file:
+    path: "{{ yq_binary_file }}"
+    state: file
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0755"

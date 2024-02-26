@@ -1,0 +1,44 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_home is defined
+      - lf_version is defined
+      - lf_archive_url is defined
+      - lf_binary_file is defined
+
+- name: Install lf required packages
+  ansible.builtin.package:
+    state: present
+    name:
+      - chafa
+      - atool
+      - fish
+      - fzf
+
+- name: Download lf binary
+  become_user: '{{ user }}'
+  ansible.builtin.shell:
+    cmd: "wget {{ lf_archive_url }} -O - | tar -xzf -"
+    chdir: "{{ lf_binary_file | dirname }}"
+    creates: "{{ lf_binary_file }}"
+
+- name: Set lf binary executable
+  ansible.builtin.file:
+    path: "{{ lf_binary_file }}"
+    state: file
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0755"
+
+- name: Clone lf config repo
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.git:
+    repo: "http://server:3003/GiteaUser/lf.git"
+    dest: "{{ user_home }}/.config/lf"
+    clone: true
+    force: true
+    version: master

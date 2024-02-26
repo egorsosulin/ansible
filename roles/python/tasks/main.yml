@@ -1,0 +1,22 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - python_packages_install is defined
+
+- name: Install python
+  ansible.builtin.package:
+    state: present
+    name:
+      - python3
+      - python3-pip
+      - python3-devel
+
+- name: Install python packages
+  ansible.builtin.pip:
+    name: '{{ package }}'
+    state: latest
+  loop: '{{ python_packages_install | list }}'
+  loop_control:
+    loop_var: package

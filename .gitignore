@@ -1,0 +1,6 @@
+*.retry
+.cache
+collections/*
+!/collections/requirements.yml
+tmp.md
+dynamic_vars_output.yml

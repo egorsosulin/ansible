@@ -1,0 +1,17 @@
+---
+
+devices:
+  e15:     6A2PHKP-OGPXMQB-VOTWQVE-3ZUDXXO-L7UQLSG-2HLGGGB-BK7PQTQ-KG27ZQW
+
+
+folders:
+
+  notes:
+    id: ajjr9-2rocz
+    path:
+      e15: /home/user/.notes
+
+  music:
+    id: kz7n6-wxht3
+    path:
+      e15:    /home/user/Music

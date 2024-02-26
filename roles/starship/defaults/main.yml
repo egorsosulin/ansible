@@ -1,0 +1,4 @@
+---
+starship_version: "v1.17.1"
+starship_archive_url: "https://github.com/starship/starship/releases/download/{{ starship_version }}/starship-x86_64-unknown-linux-gnu.tar.gz"
+starship_binary_file: "{{ user_home }}/.bin/starship"

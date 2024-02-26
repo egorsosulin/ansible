@@ -1,0 +1,41 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_home is defined
+      - notes_dir is defined
+      - notes_rotate is defined
+      - notes_scripts_repo_url is defined
+      - notes_scripts_repo_dir is defined
+
+- name: Clone Notes scripts repo # noqa: latest
+  become: true
+  become_user: '{{ user }}'
+  ansible.builtin.git:
+    repo: '{{ notes_scripts_repo_url }}'
+    dest: '{{ notes_scripts_repo_dir }}'
+
+- name: Create Notes rotate timer file
+  ansible.builtin.template:
+    src: 'notes-journal-rotate@.{{ type }}.j2'
+    dest: '/etc/systemd/system/notes-journal-rotate@.{{ type }}'
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - service
+    - timer
+  loop_control:
+    loop_var: type
+
+- name: Enable Notes rotate timer service
+  ansible.builtin.systemd:
+    name: 'notes-journal-rotate@{{ note }}.timer'
+    daemon_reload: true
+    state: started
+    enabled: true
+  loop: '{{ notes_rotate | list }}'
+  loop_control:
+    loop_var: note

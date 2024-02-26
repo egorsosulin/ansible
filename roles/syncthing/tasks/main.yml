@@ -1,0 +1,71 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+
+- name: Install Syncthing packages
+  ansible.builtin.package:
+    state: present
+    name:
+      - syncthing
+      - syncthing_meta
+
+- name: Copy systemd service file
+  ansible.builtin.copy:
+    src: "syncthing@.service"
+    dest: "/etc/systemd/system/syncthing@.service"
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Restart Syncthing user service
+
+- name: Create user config directory
+  ansible.builtin.file:
+    path: "{{ syncthing_config_dir }}"
+    state: directory
+    mode: "0700"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+
+- name: Copy user cert files
+  ansible.builtin.copy:
+    src: "{{ syncthing_certs_src_dir }}/{{ item }}"
+    dest: "{{ syncthing_config_dir }}/{{ item }}"
+    mode: "0600"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+  loop:
+    - key.pem
+    - cert.pem
+    - https-key.pem
+    - https-cert.pem
+
+- name: Copy initial configs
+  ansible.builtin.copy:
+    src: "{{ syncthing_certs_src_dir }}/{{ item }}"
+    dest: "{{ syncthing_config_dir }}/{{ item }}"
+    mode: "0600"
+    force: false
+    owner: "{{ user }}"
+    group: "{{ user }}"
+  loop:
+    - csrftokens.txt
+    - config.xml
+
+- name: Enable Syncthing systemd service
+  ansible.builtin.systemd:
+    name: "syncthing@{{ user }}.service"
+    state: started
+    enabled: true
+    daemon_reload: true
+
+- name: Copy Syncthing meta config
+  ansible.builtin.copy:
+    src: "{{ syncthing_meta_src_config }}"
+    dest: "{{ syncthing_config_dir }}/config.yml"
+    mode: "0600"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+  notify: Run Syncthing meta script

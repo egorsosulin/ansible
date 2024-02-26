@@ -1,0 +1,14 @@
+#!/usr/bin/env fish
+# Wrapper for KeePassXC for openning default database via age private key
+
+# =============================================================================
+
+set pass_db  "{{ keepassxc_default_db }}" # var from Ansible
+set pass_key (string replace 'kdbx' 'sops' $pass_db)
+set age_key  "/run/user/$(id -u)/age"
+
+if [ -e $pass_db -a -e $pass_key -a -e $age_key ]
+    sops exec-file $pass_key "cat {} | exec keepassxc --pw-stdin $pass_db"
+else
+    exec keepassxc
+end

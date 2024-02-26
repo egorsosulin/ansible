@@ -1,0 +1,39 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+
+- name: Install Doom Emacs required packages
+  ansible.builtin.package:
+    state: present
+    name:
+      - ripgrep
+      - fd-find
+      - libvterm
+      - libtool
+      - sqlite
+      - cmake
+      - emacs
+      - git
+
+- name: Clone Doom Emacs repo # noqa: latest
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.git:
+    repo: "https://github.com/doomemacs/doomemacs.git"
+    dest: "/home/{{ user }}/.emacs.d"
+    update: false
+  notify: Run Doom Emacs install
+
+- name: Clone Doom Emacs Config repo
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.git:
+    repo: "http://server:3003/GiteaUser/doom_emacs.git"
+    dest: "/home/{{ user }}/.config/doom"
+    clone: true
+    force: true
+    version: master
+  notify: Sync Doom Emacs config

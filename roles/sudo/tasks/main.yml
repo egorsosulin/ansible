@@ -1,0 +1,24 @@
+---
+
+- name: Install sudo
+  ansible.builtin.package:
+    name: sudo
+    state: present
+
+- name: Enable no-password sudo for wheel user group
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    regexp: "%wheel.*NOPASSWD"
+    line: "%wheel  ALL=(ALL)       NOPASSWD: ALL"
+    owner: root
+    group: root
+    mode: '0440'
+
+- name: Enable no-password sudo for wheel user group
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    regexp: "^Defaults    !fqdn"
+    line: "Defaults    !fqdn"
+    owner: root
+    group: root
+    mode: '0440'

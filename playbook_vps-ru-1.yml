@@ -1,0 +1,99 @@
+---
+
+- name: Configure VPS-RU-1
+  hosts: vps-ru-1
+  become: true
+  gather_facts: true
+  force_handlers: true
+  tasks:
+    - name: Apply system roles
+      ansible.builtin.include_role:
+        name: '{{ role }}'
+      vars:
+        sysctl:
+          - name: vm.swappiness
+            value: '200'
+          - name: net.ipv6.conf.all.disable_ipv6
+            value: '1'
+          - name: net.ipv6.conf.default.disable_ipv6
+            value: '1'
+          - name: net.ipv6.conf.lo.disable_ipv6
+            value: '1'
+          - name: net.ipv4.ip_forward
+            value: '1'
+        zram:
+          - name: zram0
+            size: 'ram * 2'
+            compress: 'zstd'
+        packages_remove:
+          - plocate
+        journald_config_settings: persistent
+        systemd_services_disabled:
+          - dnf-makecache.timer
+          - raid-check.timer
+          - chronyd.service
+        sshd_config_settings:
+          - name: PermitRootLogin
+            value: prohibit-password
+          - name: Port
+            value: '44422'
+        networkmanager_enabled: false
+        firewalld_config: /etc/firewalld/firewalld-workstation.conf
+        firewalld_default_zone: public
+        firewalld_interface: eth0
+        firewalld_zone: public
+        firewalld_enabled_services:
+          - wireguard
+          - mosh
+        firewalld_enabled_ports:
+          - '44422/tcp' # custem SSH port
+        wireguard_interface_name: "{{ wg.interface }}"
+        wireguard_interface_address: "{{ wg.peers[inventory_hostname].private_ip }}/32"
+        wireguard_interface_private_key: "{{ wg.peers[inventory_hostname].private_key }}"
+        wireguard_interface_listen_port: "{{ wg.listen_port }}"
+        wireguard_interface_table: "{{ wg.ip_rule_table }}"
+        wireguard_interface_pre_up:
+          # - 'firewall-cmd --zone=public --add-port={{ wg.listen_port }}/udp' # TODO Delete me
+          - 'ip rule add iif %i table {{ wg.ip_rule_table }} priority {{ wg.ip_rule_priority }}'
+        # wireguard_interface_post_up:
+          # - 'firewall-cmd --zone=trusted --add-interface=%i'
+          # - 'firewall-cmd --zone=trusted --add-forward'
+        # wireguard_interface_pre_down:
+          # - 'firewall-cmd --zone=trusted --remove-interface=%i'
+          # - 'firewall-cmd --zone=trusted --remove-forward'
+        wireguard_interface_post_down:
+          # - 'firewall-cmd --zone=public --remove-port={{ wg.listen_port }}/udp' # TODO Delete me
+          - 'ip rule del iif %i table {{ wg.ip_rule_table }} priority {{ wg.ip_rule_priority }}'
+        wireguard_peers:
+          - name: e15
+            public_key: "{{ wg.peers['e15'].public_key }}"
+            allowed_ips: "{{ wg.peers['e15'].private_ip }}/32"
+          - name: ivivm-1
+            public_key: "{{ wg.peers['ivivm-1'].public_key }}"
+            allowed_ips: "{{ wg.peers['ivivm-1'].private_ip }}/32"
+          - name: vps-eu-1
+            public_key: "{{ wg.peers['vps-eu-1'].public_key }}"
+            allowed_ips: "0.0.0.0/0"
+      loop:
+        - sshd
+        - zram
+        - fstrim
+        - sysctl
+        - systemd
+        - journald
+        - hostname
+        - packages
+        - resolved
+        - timesyncd
+        - firewalld
+        - wireguard
+        - networkmanager
+      loop_control:
+        loop_var: role
+
+    - name: Apply firewall trusted zone for wireguard interface
+      ansible.builtin.include_role:
+        name: firewalld
+      vars:
+        firewalld_interface: "{{ wg.interface }}"
+        firewalld_zone: trusted

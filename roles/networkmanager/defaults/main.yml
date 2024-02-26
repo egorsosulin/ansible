@@ -1,0 +1,4 @@
+---
+networkmanager_config_dir: /etc/NetworkManager/conf.d
+networkmanager_enabled: true
+networkmanager_manage_wireguard: true

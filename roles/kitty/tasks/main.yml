@@ -1,0 +1,23 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_home is defined
+
+- name: Install Kitty required packages
+  ansible.builtin.package:
+    state: present
+    name:
+      - kitty
+
+- name: Clone Kitty config repo
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.git:
+    repo: "http://server:3003/GiteaUser/kitty.git"
+    dest: "{{ user_home }}/.config/kitty"
+    clone: true
+    force: true
+    version: master

@@ -1,0 +1,41 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_home is defined
+      - vagrant_rpm_url is defined
+      - vagrant_http_proxy is defined
+      - vagrant_libvirt_plugin_flag is defined
+
+- name: Remove default vagrant libvirt extension
+  ansible.builtin.package:
+    state: absent
+    name:
+      - vagrant-libvirt
+
+- name: Install vagrant libvirt requirements
+  ansible.builtin.package:
+    state: present
+    name:
+      - libvirt-devel
+      - wget
+
+- name: Install vagrant from Hashicorp Website
+  ansible.builtin.script: 'install.sh {{ vagrant_rpm_url }} {{ vagrant_http_proxy }}'
+  args:
+    creates: /opt/vagrant
+
+- name: Setup vagrant libvirt extension
+  become_user: '{{ user }}'
+  ansible.builtin.shell:
+    cmd: >-
+      vagrant plugin install vagrant-libvirt
+      && mkdir -p {{ vagrant_libvirt_plugin_flag }}
+    creates: '{{ vagrant_libvirt_plugin_flag }}'
+  environment:
+    http_proxy: '{{ vagrant_http_proxy }}'
+    https_proxy: '{{ vagrant_http_proxy }}'
+    VAGRANT_HTTP_PROXY: '{{ vagrant_http_proxy }}'
+    VAGRANT_HTTPS_PROXY: '{{ vagrant_http_proxy }}'

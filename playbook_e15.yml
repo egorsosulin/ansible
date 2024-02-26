@@ -1,0 +1,175 @@
+---
+
+- name: Configure E15 laptop
+  hosts: e15
+  become: true
+  gather_facts: true
+  force_handlers: true
+  vars:
+    user: user
+    user_uid: 1000
+    user_gid: 1000
+    user_home: '/home/user'
+    user_age_pubkey: 'age13ktuc6w6hfy3c4rt2hhzm5qqu3vnklng70l2q7rmvll5ytlx7exqunk9ac'
+  tasks:
+
+    - name: Apply system roles
+      ansible.builtin.include_role:
+        name: '{{ role }}'
+      vars:
+        snapper:
+          - name: root
+            volume: /
+          - name: home
+            volume: /home
+          - name: storage
+            volume: /mnt/storage
+        btrfs_scrub_mounts: '/:/mnt/storage'
+        sysctl:
+          - name: vm.swappiness
+            value: '200'
+          - name: net.ipv6.conf.all.disable_ipv6
+            value: '1'
+          - name: net.ipv6.conf.default.disable_ipv6
+            value: '1'
+          - name: net.ipv6.conf.lo.disable_ipv6
+            value: '1'
+        zram:
+          - name: zram0
+            size: 'ram * 1'
+            compress: 'zstd'
+        selinux: false
+        sshd_manage_host_keys: true
+        sshd_config_settings:
+          - name: PermitRootLogin
+            value: 'yes'
+        packages_remove:
+          - plocate
+        python_packages_install:
+          - poetry
+        flatpak_packages_install:
+          - com.jgraph.drawio.desktop
+          - com.visualstudio.code-oss
+          - com.belmoussaoui.Decoder
+          - org.chromium.Chromium
+          - org.telegram.desktop
+          - com.google.Chrome
+          - ru.yandex.Browser
+          - com.brave.Browser
+        firewalld_config: /etc/firewalld/firewalld-workstation.conf
+        firewalld_default_zone: FedoraWorkstation
+        firewalld_zone: FedoraWorkstation
+        firewalld_enabled_services:
+          - transmission-client
+          - dhcpv6-client
+          - samba-client
+          - vnc-server
+          - syncthing
+          - mdns
+          - mosh
+          - nfs
+          - ssh
+          - rdp
+        networkmanager_manage_wireguard: false
+        wireguard_interface_name: "{{ wg.interface }}"
+        wireguard_interface_address: "{{ wg.peers[inventory_hostname].private_ip }}/24"
+        wireguard_interface_private_key: "{{ wg.peers[inventory_hostname].private_key }}"
+        wireguard_peers:
+          - name: "{{ wg.server }}"
+            public_key: "{{ wg.peers[wg.server].public_key }}"
+            endpoint: "{{ wg.peers[wg.server].public_ip }}:{{ wg.listen_port }}"
+            keepalive: "{{ wg.keepalive }}"
+            allowed_ips: "{{ wg.netmask }}"
+      loop:
+        - sudo
+        - sshd
+        - zram
+        - btrfs
+        - fstrim
+        - python
+        - sysctl
+        - snapper
+        - selinux
+        - flatpak
+        - journald
+        - packages
+        - wireguard
+        - firewalld
+        - networkmanager
+      loop_control:
+        loop_var: role
+
+    - name: Apply user roles
+      ansible.builtin.include_role:
+        name: '{{ role }}'
+      vars:
+        ssh_client_authorized_keys:
+          - user
+        ssh_client_known_hosts:
+          - e15
+          - server
+          - thinkbook
+        slack_wayland_fix: true
+        gitea_url: http://server:3003
+        gitea_login: GiteaUser
+        gitea_repos_dir: '{{ user_home }}/Git'
+        vagrant_http_proxy: "http://{{ wg.peers['vps-eu-1'].private_ip }}:8888"
+        keepassxc_default_db: '{{ user_home }}/.passwords/MyPasswords.kdbx'
+      loop:
+        - age
+        - sops
+        - git
+        - ssh_client
+        - mpv
+        - starship
+        - fish
+        - lf
+        - yq
+        - bat
+        - tmux
+        - helix
+        - emacs
+        - fonts
+        - kitty
+        - keepassxc
+        - thefuck
+        - podman
+        - antimicrox
+        - remmina
+        - ydotool
+        - slack
+        - syncthing
+        - gitea_repos_clone
+        - gnome
+      loop_control:
+        loop_var: role
+
+    - name: Create borgbackups for user
+      vars:
+        sources:
+          - {name: 'git', src: 'Git'}
+          - {name: 'notes', src: '.notes'}
+          - {name: 'documents', src: 'Documents'}
+          - {name: 'passwords', src: '.passwords'}
+        destinations:
+          - {type: 'home', dest: '{{ user_home }}/.backups'}
+          - {type: 'storage', dest: '/mnt/storage/{{ user }}/backups'}
+      block:
+        - name: Create borgbackup repos
+          ansible.builtin.include_role:
+            name: borgbackup_repo
+          vars:
+            borgbackup_repo: '{{ repo.dest }}/{{ repo.name }}.borg'
+          loop: "{{ sources | product(destinations) | map('combine') }}"
+          loop_control:
+            loop_var: repo
+        - name: Create borgbackup configs
+          ansible.builtin.include_role:
+            name: borgbackup_client
+          vars:
+            borgbackup_name: '{{ repo.name }}-{{ repo.type }}'
+            borgbackup_source: '{{ user_home }}/{{ repo.src }}'
+            borgbackup_repo: '{{ repo.dest }}/{{ repo.name }}.borg'
+          loop: "{{ sources | product(destinations) | map('combine') }}"
+          loop_control:
+            loop_var: repo

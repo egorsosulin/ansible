@@ -1,0 +1,9 @@
+[Unit]
+Description=Do borgmatic backups
+Documentation=man:borgmatic
+
+[Service]
+User=%j
+Type=oneshot
+ExecStart=/usr/bin/borgmatic -c /home/%j/.config/borgmatic.d/%i.yml create --verbosity 2
+ExecStartPre=/usr/bin/borgmatic -c /home/%j/.config/borgmatic.d/%i.yml prune --verbosity 2

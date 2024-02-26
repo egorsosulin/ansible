@@ -1,0 +1,29 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - nfs_server_exports is defined
+      - nfs_server_defaults is defined
+
+- name: Install NFS server packages
+  ansible.builtin.package:
+    state: present
+    name:
+      - nfs-utils
+
+- name: Create NFS server exports file
+  ansible.builtin.template:
+    src: 'exports.j2'
+    dest: '/etc/exports'
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Update NFS server exports
+
+- name: Enable NFS server
+  ansible.builtin.systemd:
+    name: 'nfs-server.service'
+    daemon_reload: true
+    state: started
+    enabled: true

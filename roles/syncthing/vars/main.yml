@@ -1,0 +1,7 @@
+---
+
+syncthing_config_dir: "/home/{{ user }}/.config/syncthing"
+syncthing_meta_config: "{{ syncthing_config_dir }}/config.yml"
+
+syncthing_certs_src_dir: "syncthing/{{ user }}/certs/{{ inventory_hostname }}"
+syncthing_meta_src_config: "syncthing/{{ user }}/config/config.yml"

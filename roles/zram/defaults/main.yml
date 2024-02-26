@@ -1,0 +1,5 @@
+---
+zram:
+  - name: zram0
+    size: "ram * 1"
+    compress: "zstd"

@@ -1,0 +1,37 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - apt is defined
+      - apt.security is bool
+      - apt.backports is bool
+      - apt.release is defined
+      - apt.location is defined
+      - ansible_facts['os_family'] == "Debian"
+
+- name: Remove default sources list
+  ansible.builtin.file:
+    dest: /etc/apt/sources.list
+    state: absent
+
+- name: Create main apt sources list file
+  ansible.builtin.template:
+    src: sources.list.j2
+    dest: /etc/apt/sources.list.d/main.list
+    mode: '0644'
+    owner: root
+    group: root
+  notify: Update apt cache
+
+- name: Check i386 architecture
+  ansible.builtin.shell:
+    cmd: "set -o pipefail && dpkg --print-foreign-architectures | grep i386"
+  register: i386_arch
+  changed_when: i386_arch.rc == 1
+  failed_when: i386_arch.rc > 1
+
+- name: Enable i386 architecture
+  ansible.builtin.command:
+    cmd: "dpkg --add-architecture i386"
+  when: i386_arch.rc == 1

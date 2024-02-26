@@ -1,0 +1,40 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - borgbackup_repo is defined
+      - borgbackup_password is defined
+
+- name: Install borgbackup package
+  ansible.builtin.package:
+    state: present
+    name:
+      - borgbackup
+
+- name: Create encrypted borgbackup repo
+  become_user: '{{ user }}'
+  ansible.builtin.command:
+    cmd: >-
+      borg init
+      --make-parent-dirs
+      --encryption repokey
+      {{ borgbackup_repo }}
+    creates: '{{ borgbackup_repo }}'
+  environment:
+    BORG_PASSPHRASE: '{{ borgbackup_password }}'
+  when:
+    - borgbackup_password != 'none'
+
+- name: Create unencrypted borgbackup repo
+  become_user: '{{ user }}'
+  ansible.builtin.command:
+    cmd: >-
+      borg init
+      --make-parent-dirs
+      --encryption none
+      {{ borgbackup_repo }}
+    creates: '{{ borgbackup_repo }}'
+  when:
+    - borgbackup_password == 'none'

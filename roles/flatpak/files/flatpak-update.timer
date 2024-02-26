@@ -1,0 +1,11 @@
+[Unit]
+Description=Update flatpak packages
+Documentation=man:flatpak-update
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=4h
+Persistent=false
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,4 @@
+---
+
+sops_version: "3.7.3"
+sops_url: "https://github.com/mozilla/sops/releases/download/v{{ sops_version }}/sops-{{ sops_version }}-1.x86_64.rpm"

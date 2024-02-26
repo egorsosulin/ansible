@@ -1,0 +1,7 @@
+---
+
+- name: Restart dante service
+  ansible.builtin.systemd:
+    name: "{{ dante_systemd_service_name }}"
+    state: restarted
+    daemon_reload: true

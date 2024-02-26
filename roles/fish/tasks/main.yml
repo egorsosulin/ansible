@@ -1,0 +1,48 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+
+- name: Install fish packages
+  ansible.builtin.package:
+    state: present
+    name:
+      - eza
+      - git
+      - bat
+      - htop
+      - btop
+      - entr
+      - fish
+      - lnav
+      - httpie
+      - zoxide
+      - ripgrep
+      - python3-rich
+      - python3-devel
+      - python3-invoke
+
+- name: Install RPMs from external repos
+  ansible.builtin.dnf:
+    state: present
+    disable_gpg_check: true
+    name:
+      - 'https://github.com/rsteube/carapace-bin/releases/download/v0.24.5/carapace-bin_0.24.5_linux_amd64.rpm'
+
+- name: Clone fish config repo
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.git:
+    repo: "http://server:3003/GiteaUser/fish.git"
+    dest: "/home/{{ user }}/.config/fish"
+    clone: true
+    force: true
+    version: master
+
+- name: Set fish as default user shell
+  become: true
+  ansible.builtin.user:
+    name: "{{ user }}"
+    shell: /usr/bin/fish

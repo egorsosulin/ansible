@@ -1,0 +1,12 @@
+[Unit]
+Description=Rotate Notes Journal
+
+[Service]
+User={{ user }}
+Type=oneshot
+Environment=NOTES_PATH={{ notes_dir }}/%i
+ExecStart={{ notes_scripts_repo_dir }}/journal_rotate.fish
+
+[Install]
+WantedBy=multi-user.target
+

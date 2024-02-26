@@ -1,0 +1,4 @@
+---
+zellij_version: 'v0.39.0'
+zellij_archive_url: "https://github.com/zellij-org/zellij/releases/download/{{ zellij_version }}/zellij-x86_64-unknown-linux-musl.tar.gz"
+zellij_binary_file: "{{ user_home }}/.bin/zellij"

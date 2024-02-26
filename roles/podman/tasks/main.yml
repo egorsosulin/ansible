@@ -1,0 +1,47 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_home is defined
+
+- name: Install podman packages
+  ansible.builtin.package:
+    state: present
+    name:
+      - podman
+      - python3-podman
+
+- name: Create podman user config directory
+  ansible.builtin.file:
+    path: "{{ user_home }}/.config/containers"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0700"
+  when:
+    - user is defined
+    - user_home is defined
+
+- name: Create podman user config directory
+  ansible.builtin.file:
+    path: "{{ user_home }}/.config/containers"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0700"
+  when:
+    - user is defined
+    - user_home is defined
+
+- name: Copy podman user config
+  ansible.builtin.copy:
+    src: storage.conf
+    dest: "{{ user_home }}/.config/containers/storage.conf"
+    mode: "0644"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+  when:
+    - user is defined
+    - user_home is defined

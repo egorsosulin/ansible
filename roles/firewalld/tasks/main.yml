@@ -1,0 +1,92 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - firewalld_zone is defined
+      - firewalld_config is defined
+      - firewalld_service is defined
+      - firewalld_enabled_ports is defined
+      - firewalld_disabled_ports is defined
+      - firewalld_enabled_services is defined
+      - firewalld_disabled_services is defined
+
+- name: Install firewalld packages
+  ansible.builtin.package:
+    state: present
+    name:
+      - firewalld
+
+- name: Enable firewalld service
+  ansible.builtin.systemd:
+    name: "{{ firewalld_service }}"
+    state: started
+    enabled: true
+
+- name: Set firewalld default zone
+  ansible.builtin.lineinfile:
+    path: "{{ firewalld_config }}"
+    regexp: "^#?{{ param.name }}="
+    line: '{{ param.name }}={{ param.value }}'
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - name: DefaultZone
+      value: "{{ firewalld_default_zone }}"
+  loop_control:
+    loop_var: param
+  notify: Restart systemd firewalld service
+  when: firewalld_default_zone is defined
+
+- name: Set firewalld zone for interface
+  ansible.posix.firewalld:
+    zone: "{{ firewalld_zone }}"
+    interface: "{{ firewalld_interface }}"
+    permanent: true
+    state: enabled
+  when: firewalld_interface is defined
+
+- name: Enable firewalld ports
+  ansible.posix.firewalld:
+    port: '{{ port }}'
+    permanent: true
+    immediate: true
+    state: enabled
+    zone: '{{ firewalld_zone }}'
+  loop: '{{ firewalld_enabled_ports | list }}'
+  loop_control:
+    loop_var: port
+
+- name: Disable firewalld ports
+  ansible.posix.firewalld:
+    port: '{{ port }}'
+    permanent: true
+    immediate: true
+    state: disabled
+    zone: '{{ firewalld_zone }}'
+  loop: '{{ firewalld_disabled_ports | list }}'
+  loop_control:
+    loop_var: port
+
+- name: Enable firewalld services
+  ansible.posix.firewalld:
+    service: '{{ service }}'
+    permanent: true
+    immediate: true
+    state: enabled
+    zone: '{{ firewalld_zone }}'
+  loop: '{{ firewalld_enabled_services | list }}'
+  loop_control:
+    loop_var: service
+
+- name: Disable firewalld services
+  ansible.posix.firewalld:
+    service: '{{ service }}'
+    permanent: true
+    immediate: true
+    state: disabled
+    zone: '{{ firewalld_zone }}'
+  loop: '{{ firewalld_disabled_services | list }}'
+  loop_control:
+    loop_var: service

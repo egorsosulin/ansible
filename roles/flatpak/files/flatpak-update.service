@@ -1,0 +1,8 @@
+[Unit]
+Description=Update flatpak packages
+Documentation=man:flatpak-update
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/flatpak update --assumeyes --noninteractive
+ExecStartPost=/usr/bin/flatpak uninstall --unused --assumeyes --noninteractive

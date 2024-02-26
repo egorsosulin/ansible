@@ -1,0 +1,5 @@
+---
+
+- name: Disable selinux via kernel args
+  ansible.builtin.command:
+    cmd: "grubby --update-kernel ALL --args selinux=0"

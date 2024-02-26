@@ -1,0 +1,35 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_uid is defined
+      - user_gid is defined
+      - user_home is defined
+      - user_shell is defined
+      - user_groups is defined
+      - user_shell_package is defined
+      - user_password_hash is defined
+
+- name: Install user shell package
+  ansible.builtin.package:
+    state: present
+    name: '{{ user_shell_package }}'
+
+- name: Create user group
+  ansible.builtin.group:
+    name: '{{ user }}'
+    gid: '{{ user_gid }}'
+    state: present
+
+- name: Create user account
+  ansible.builtin.user:
+    append: true
+    create_home: true
+    groups: '{{ user_groups }}'
+    home: '{{ user_home }}'
+    name: '{{ user }}'
+    password: '{{ user_password_hash }}'
+    shell: '{{ user_shell }}'
+    uid: '{{ user_uid }}'

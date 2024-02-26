@@ -1,0 +1,42 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_home is defined
+      - sops_version is defined
+      - sops_url is defined
+
+- name: Install age package
+  ansible.builtin.package:
+    state: present
+    name:
+      - age
+
+- name: Install sops package
+  ansible.builtin.dnf:
+    name: "{{ sops_url }}"
+    disable_gpg_check: true
+    state: present
+
+- name: Create sops config directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0700"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+  loop:
+    - "{{ user_home }}/.config"
+    - "{{ user_home }}/.config/sops"
+    - "{{ user_home }}/.config/sops/age"
+
+- name: Create sops link to age identity file
+  ansible.builtin.file:
+    src: "/run/user/{{ user_uid }}/age"
+    dest: "{{ user_home }}/.config/sops/age/keys.txt"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    force: true
+    state: link

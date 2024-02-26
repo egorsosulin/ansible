@@ -1,0 +1,94 @@
+---
+
+- name: Configure VPS-EU-1
+  hosts: vps-eu-1
+  become: true
+  gather_facts: true
+  force_handlers: true
+  tasks:
+    - name: Apply system roles
+      ansible.builtin.include_role:
+        name: '{{ role }}'
+      vars:
+        sysctl:
+          - name: vm.swappiness
+            value: '200'
+          - name: net.ipv6.conf.all.disable_ipv6
+            value: '1'
+          - name: net.ipv6.conf.default.disable_ipv6
+            value: '1'
+          - name: net.ipv6.conf.lo.disable_ipv6
+            value: '1'
+          - name: net.ipv4.ip_forward
+            value: '1'
+        zram:
+          - name: zram0
+            size: 'ram * 2'
+            compress: 'zstd'
+        packages_install:
+          - iptables-nft
+        packages_remove:
+          - plocate
+        journald_storage: persistent
+        systemd_services_disabled:
+          - dnf-makecache.timer
+          - raid-check.timer
+          - chronyd.service
+        sshd_config_settings:
+          - name: PermitRootLogin
+            value: prohibit-password
+          - name: Port
+            value: '44422'
+        dante_external_interface: eth0
+        dante_internal_port: 1080
+        dante_client_allow_subnet: "{{ wg.netmask }}"
+        tinyproxy_allow_subnet: "{{ wg.netmask }}"
+        networkmanager_enabled: false
+        firewalld_config: /etc/firewalld/firewalld-workstation.conf
+        firewalld_default_zone: public
+        firewalld_interface: eth0
+        firewalld_zone: public
+        firewalld_enabled_services:
+          - mosh
+        firewalld_enabled_ports:
+          - '44422/tcp' # custem SSH port
+        wireguard_interface_name: "{{ wg.interface }}"
+        wireguard_interface_address: "{{ wg.peers[inventory_hostname].private_ip }}/32"
+        wireguard_interface_private_key: "{{ wg.peers[inventory_hostname].private_key }}"
+        wireguard_interface_post_up:
+          - 'iptables -t mangle -A PREROUTING -i %i -j MARK --set-mark 0x30'
+          - 'iptables -t nat -A POSTROUTING ! -o %i -m mark --mark 0x30 -j MASQUERADE'
+        wireguard_interface_pre_down:
+          - 'iptables -t mangle -D PREROUTING -i %i -j MARK --set-mark 0x30'
+          - 'iptables -t nat -D POSTROUTING ! -o %i -m mark --mark 0x30 -j MASQUERADE'
+        wireguard_peers:
+          - name: "{{ wg.server }}"
+            public_key: "{{ wg.peers[wg.server].public_key }}"
+            endpoint: "{{ wg.peers[wg.server].public_ip }}:{{ wg.listen_port }}"
+            keepalive: "{{ wg.keepalive }}"
+            allowed_ips: "{{ wg.netmask }}"
+      loop:
+        - sshd
+        - zram
+        - dante
+        - fstrim
+        - sysctl
+        - systemd
+        - journald
+        - hostname
+        - packages
+        - resolved
+        - timesyncd
+        - firewalld
+        - tinyproxy
+        - wireguard
+        - networkmanager
+      loop_control:
+        loop_var: role
+
+    - name: Apply firewall trusted zone for wireguard interface
+      ansible.builtin.include_role:
+        name: firewalld
+      vars:
+        firewalld_interface: "{{ wg.interface }}"
+        firewalld_zone: trusted

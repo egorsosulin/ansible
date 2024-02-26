@@ -1,0 +1,15 @@
+---
+
+dante_config_dir: /etc/dante
+dante_config_file: '{{ dante_config_dir }}/sockd.conf'
+dante_systemd_service_name: dante.service
+dante_systemd_service_file: '/etc/systemd/system/{{ dante_systemd_service_name }}'
+dante_docker_image: 'docker.io/vimagick/dante:latest'
+dante_internal_ip: '0.0.0.0'
+dante_internal_port: '1080'
+dante_external_interface: eth0
+dante_socketmethod: none
+dante_clientmethod: none
+dante_client_allow_subnet: '0.0.0.0/0'
+dante_privileged_user: root
+dante_unprivileged_user: nobody

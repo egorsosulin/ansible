@@ -1,0 +1,43 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_home is defined
+      - starship_version is defined
+      - starship_archive_url is defined
+      - starship_binary_file is defined
+
+- name: Download starship binary
+  become_user: '{{ user }}'
+  ansible.builtin.shell:
+    cmd: "wget {{ starship_archive_url }} -O - | tar -xzf -"
+    chdir: "{{ starship_binary_file | dirname }}"
+    creates: "{{ starship_binary_file }}"
+
+- name: Set starship binary executable
+  ansible.builtin.file:
+    path: "{{ starship_binary_file }}"
+    state: file
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0755"
+
+- name: Clone starship config repo
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.git:
+    repo: "http://server:3003/GiteaUser/starship.git"
+    dest: "{{ user_home }}/.config/starship"
+    clone: true
+    force: true
+    version: master
+
+- name: Create a symlink for starship config
+  ansible.builtin.file:
+    src: "{{ user_home }}/.config/starship/starship.toml"
+    dest: "{{ user_home }}/.config/starship.toml"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    state: link

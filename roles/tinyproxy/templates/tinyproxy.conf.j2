@@ -1,0 +1,29 @@
+User tinyproxy
+Group tinyproxy
+
+Port {{ tinyproxy_listen_port }}
+Listen {{ tinyproxy_listen_ip }}
+Bind {{ tinyproxy_bind_ip }}
+
+Timeout 600
+
+DefaultErrorFile "/usr/share/tinyproxy/default.html"
+StatFile "/usr/share/tinyproxy/stats.html"
+Syslog On
+LogLevel Warning
+PidFile "/run/tinyproxy/tinyproxy.pid"
+
+MaxClients 100
+MinSpareServers 5
+MaxSpareServers 20
+StartServers 10
+MaxRequestsPerChild 0
+
+Allow {{ tinyproxy_allow_subnet }}
+ViaProxyName "tinyproxy"
+DisableViaHeader Yes
+
+ConnectPort 80
+ConnectPort 443
+ConnectPort 563
+

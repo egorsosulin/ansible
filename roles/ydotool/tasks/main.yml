@@ -1,0 +1,30 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_uid is defined
+      - user_gid is defined
+
+- name: Install ydotool package
+  ansible.builtin.package:
+    state: present
+    name:
+      - ydotool
+
+- name: Copy systemd service file
+  ansible.builtin.template:
+    src: "ydotool-.service"
+    dest: "/etc/systemd/system/ydotool-{{ user }}.service"
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Restart ydotool user service
+
+- name: Enable ydotool systemd service
+  ansible.builtin.systemd:
+    name: "ydotool-{{ user }}.service"
+    state: started
+    enabled: true
+    daemon_reload: true

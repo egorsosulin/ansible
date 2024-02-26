@@ -1,0 +1,12 @@
+[Unit]
+Description=Dante SOCKS5 Proxy Daemon
+After=network.target
+
+[Service]
+User=root
+Type=simple
+Restart=always
+ExecStart=/usr/bin/podman run --rm -ti --network host -v {{ dante_config_dir }}:/etc/dante:ro {{ dante_docker_image }}
+
+[Install]
+WantedBy=multi-user.target

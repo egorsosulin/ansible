@@ -1,0 +1,3 @@
+---
+flatpak_autoupdate: true
+flatpak_packages_install: []

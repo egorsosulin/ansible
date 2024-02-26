@@ -1,0 +1,4 @@
+---
+resolved_dns: '8.8.8.8'
+resolved_cache: 'yes'
+resolved_config: '/etc/systemd/resolved.conf'

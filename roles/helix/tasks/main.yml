@@ -1,0 +1,34 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_home is defined
+      - helix_version is defined
+      - helix_binary_url is defined
+      - helix_binary_file is defined
+      
+- name: Download helix binary
+  become_user: '{{ user }}'
+  ansible.builtin.shell:
+    cmd: "wget {{ helix_binary_url }} -O {{ helix_binary_file }}"
+    creates: "{{ helix_binary_file }}"
+
+- name: Set helix binary executable
+  ansible.builtin.file:
+    path: "{{ helix_binary_file }}"
+    state: file
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: "0755"
+  
+- name: Clone helix config repo
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.git:
+    repo: "http://server:3003/GiteaUser/helix.git"
+    dest: "/home/{{ user }}/.config/helix"
+    clone: true
+    force: true
+    version: master

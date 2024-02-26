@@ -1,0 +1,12 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+
+- name: Install neovim package
+  ansible.builtin.package:
+    state: present
+    name:
+      - neovim

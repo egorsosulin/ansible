@@ -1,0 +1,58 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+      - user_home is defined
+      - keepassxc_config_dir
+
+- name: Install keepassxc package
+  ansible.builtin.package:
+    state: present
+    name:
+      - keepassxc
+
+- name: Create keepassxc config directory
+  ansible.builtin.file:
+    path: "{{ keepassxc_config_dir }}"
+    state: directory
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: '0755'
+
+- name: Create keepassxc config file
+  ansible.builtin.lineinfile:
+    path: "{{ keepassxc_config_dir }}/keepassxc.ini"
+    create: true
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    search_string: '[GUI]'
+    line: '[GUI]'
+    mode: '0644'
+
+- name: Set default GTK theme for keepassxc
+  ansible.builtin.lineinfile:
+    path: "{{ keepassxc_config_dir }}/keepassxc.ini"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    insertafter: '[GUI]'
+    search_string: 'ApplicationTheme=classic'
+    line: 'ApplicationTheme=classic'
+
+- name: Create keepassxc age wrapper script
+  ansible.builtin.template:
+    src: "keepassxc-age-wrapper.fish.j2"
+    dest: "{{ keepassxc_config_dir }}/keepassxc-age-wrapper.fish"
+    mode: "0744"
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    validate: "/usr/bin/fish --no-execute %s"
+
+- name: Create keepassxc age wrapper desktop file
+  ansible.builtin.template:
+    src: "AgeKeePassXC.desktop.j2"
+    dest: "{{ user_home }}/.local/share/applications/AgeKeePassXC.desktop"
+    mode: "0644"
+    owner: "{{ user }}"
+    group: "{{ user }}"

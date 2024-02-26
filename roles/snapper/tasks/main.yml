@@ -1,0 +1,63 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - snapper is defined
+      - snapper | length > 0
+
+- name: Install snapper
+  ansible.builtin.package:
+    name: snapper
+    state: present
+
+- name: Create new configs
+  ansible.builtin.command:
+    cmd: "snapper -c {{ item.name }} create-config {{ item.volume }}"
+    creates: "/etc/snapper/configs/{{ item.name }}"
+  loop: "{{ snapper | list }}"
+
+- name: Edit configs
+  ansible.builtin.template:
+    src: template.conf.j2
+    dest: "/etc/snapper/configs/{{ item.name }}"
+    owner: root
+    group: root
+    mode: "0640"
+  vars:
+    volume: "{{ item.volume }}"
+  loop: "{{ snapper | list }}"
+
+- name: Enable systemd timers
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - snapper-cleanup.timer
+    - snapper-timeline.timer
+
+- name: Disable boot systemd timer
+  ansible.builtin.systemd:
+    name: snapper-boot.timer
+    state: stopped
+    enabled: false
+
+- name: Collect configs names for Debian defaults
+  ansible.builtin.shell:
+    cmd: "set -o pipefail && ls /etc/snapper/configs | tr '\\n' ' '"
+  register: snapper_configs
+  changed_when: snapper_configs.stdout == 0
+  failed_when: snapper_configs.rc > 1
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: Set Debian defaults
+  ansible.builtin.template:
+    src: debian-defaults.j2
+    dest: /etc/default/snapper
+    owner: root
+    group: root
+    mode: "0644"
+  vars:
+    configs: "{{ snapper_configs.stdout }}"
+  when: ansible_facts['os_family'] == "Debian"

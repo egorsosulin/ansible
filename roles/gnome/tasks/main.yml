@@ -1,0 +1,34 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+
+- name: Install gnome packages
+  ansible.builtin.package:
+    state: present
+    name:
+      - cheese
+      - gcolor3
+      - dialect
+      - foliate
+      - remmina
+      - flatseal
+      - evolution
+      - file-roller
+      - dconf-editor
+      - video-downloader
+      - transmission-gtk
+      - file-roller-nautilus
+      - gnome-sound-recorder
+      - gnome-extensions-app
+      - gnome-shell-extension-appindicator # for tray icons
+      - fontawesome-fonts
+      - fontawesome5-fonts-all
+
+- name: Remove gnome packages
+  ansible.builtin.package:
+    state: absent
+    name:
+      - gnome-shell-extension-background-logo

@@ -1,0 +1,57 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+    - dante_config_dir is defined
+    - dante_config_file is defined
+    - dante_systemd_service_file is defined
+    - dante_docker_image is defined
+    - dante_internal_ip is defined
+    - dante_internal_port is defined
+    - dante_external_interface is defined
+    - dante_socketmethod is defined
+    - dante_clientmethod is defined
+    - dante_client_allow_subnet is defined
+    - dante_privileged_user is defined
+    - dante_unprivileged_user is defined
+
+- name: Install dante required packages
+  ansible.builtin.package:
+    state: present
+    name:
+      - podman
+
+- name: Create dante config directory
+  ansible.builtin.file:
+    path: '{{ dante_config_dir }}'
+    state: directory
+    owner: 'root'
+    group: 'root'
+    mode: '0755'
+  notify: Restart dante service
+
+- name: Create dante config file
+  ansible.builtin.template:
+    src: "sockd.conf.j2"
+    dest: "{{ dante_config_file }}"
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Restart dante service
+
+- name: Create dante systemd service file
+  ansible.builtin.template:
+    src: "dante.service.j2"
+    dest: "{{ dante_systemd_service_file }}"
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Restart dante service
+
+- name: Enable dante systemd service
+  ansible.builtin.systemd:
+    name: "{{ dante_systemd_service_name }}"
+    state: started
+    enabled: true
+    daemon_reload: true

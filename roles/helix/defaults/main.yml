@@ -1,0 +1,4 @@
+---
+helix_version: '23.10'
+helix_binary_url: "https://github.com/helix-editor/helix/releases/download/{{ helix_version }}/helix-{{ helix_version }}-x86_64.AppImage"
+helix_binary_file: "{{ user_home }}/.bin/hx"

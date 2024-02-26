@@ -1,0 +1,24 @@
+---
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - networkd_network is defined
+      - networkd_network_configs_dir
+
+- name: Create networkd network configs
+  ansible.builtin.template:
+    src: network.j2
+    dest: "{{ networkd_network_configs_dir }}/{{ network.priority }}-{{ network.match }}.network"
+    mode: "0644"
+    owner: "root"
+    group: "root"
+  loop_control:
+    loop_var: network
+  loop: "{{ networkd_network | list }}"
+  notify: Restart systemd-networkd service
+
+- name: Enable systemd-networkd service
+  ansible.builtin.systemd:
+    name: "{{ networkd_service }}"
+    state: started
+    enabled: true

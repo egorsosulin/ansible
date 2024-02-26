@@ -1,0 +1,29 @@
+{%- macro line(key, value) -%}
+{% if value is defined %}
+{{ key }} = {{ value|string }}
+{% endif %}
+{%- endmacro -%}
+{%- macro line_list(key, list) -%}
+{%- for value in list -%}
+{{ line(key, value) }}
+{%- endfor -%}
+{%- endmacro -%}
+
+[Interface]
+Address = {{ wireguard_interface_address }}
+PrivateKey = {{ wireguard_interface_private_key }}
+{{  line('ListenPort', wireguard_interface_listen_port) }}
+{{- line('Table', wireguard_interface_table) }}
+{{- line_list('PreUp', wireguard_interface_pre_up) }}
+{{- line_list('PostUp', wireguard_interface_post_up) }}
+{{- line_list('PreDown', wireguard_interface_pre_down) }}
+{{- line_list('PostDown', wireguard_interface_post_down) }}
+{% for peer in wireguard_peers %}
+
+# {{ peer.name }}
+[Peer]
+PublicKey = {{ peer.public_key }}
+{{  line('Endpoint', peer.endpoint) }}
+{{- line('PersistentKeepalive', peer.keepalive) }}
+{{- line('AllowedIPs', peer.allowed_ips) }}
+{% endfor %}

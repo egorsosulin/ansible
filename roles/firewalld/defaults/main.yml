@@ -1,0 +1,7 @@
+---
+firewalld_config: /etc/firewalld/firewalld.conf
+firewalld_service: firewalld.service
+firewalld_enabled_ports: []
+firewalld_disabled_ports: []
+firewalld_enabled_services: []
+firewalld_disabled_services: []

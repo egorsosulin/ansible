@@ -1,0 +1,54 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - sshd_manage_host_keys is defined
+      - sshd_config_settings is defined
+
+- name: Enable ssh daemon
+  ansible.builtin.systemd:
+    name: sshd.service
+    state: started
+    enabled: true
+
+- name: Copy ssh host private keys
+  ansible.builtin.copy:
+    src: "ssh/hosts/{{ inventory_hostname }}/{{ item }}"
+    dest: "/etc/ssh/{{ item }}"
+    mode: "0600"
+    owner: root
+    group: root
+  loop:
+    - ssh_host_ecdsa_key
+    - ssh_host_ed25519_key
+    - ssh_host_rsa_key
+  notify: Restart SSH service
+  when: sshd_manage_host_keys
+
+- name: Copy ssh host public keys
+  ansible.builtin.copy:
+    src: "ssh/hosts/{{ inventory_hostname }}/{{ item }}.pub"
+    dest: "/etc/ssh/{{ item }}.pub"
+    mode: "0644"
+    owner: root
+    group: root
+  loop:
+    - ssh_host_ecdsa_key
+    - ssh_host_ed25519_key
+    - ssh_host_rsa_key
+  notify: Restart SSH service
+  when: sshd_manage_host_keys
+
+- name: Set sshd_config settings
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?{{ param.name }} '
+    line: '{{ param.name }} {{ param.value }}'
+    owner: root
+    group: root
+    mode: '0600'
+  loop: '{{ sshd_config_settings | list }}'
+  loop_control:
+    loop_var: param
+  notify: Restart SSH service

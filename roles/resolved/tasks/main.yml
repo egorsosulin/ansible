@@ -1,0 +1,32 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - resolved_dns is defined
+      - resolved_cache is defined
+      - resolved_config is defined
+
+- name: Set resolved.conf settings
+  ansible.builtin.lineinfile:
+    path: "{{ resolved_config }}"
+    regexp: "^#?{{ param.name }}="
+    line: '{{ param.name }}={{ param.value }}'
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - name: DNS
+      value: "{{ resolved_dns }}"
+    - name: Cache
+      value: "{{ resolved_cache }}"
+  loop_control:
+    loop_var: param
+  notify: Restart systemd resolved service
+
+- name: Enable systemd resolved service
+  ansible.builtin.systemd:
+    name: systemd-resolved.service
+    state: started
+    enabled: true
+  notify: Create resolve.conf symlink

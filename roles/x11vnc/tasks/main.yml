@@ -1,0 +1,28 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - user is defined
+
+- name: Install x11vnc package
+  ansible.builtin.package:
+    state: present
+    name:
+      - x11vnc
+
+- name: Copy x11vnc systemd service file
+  ansible.builtin.copy:
+    src: "x11vnc@.service"
+    dest: "/etc/systemd/system/x11vnc@.service"
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Restart x11vnc service
+
+- name: Enable x11vnc systemd service
+  ansible.builtin.systemd:
+    name: "x11vnc@{{ user }}.service"
+    state: started
+    enabled: true
+    daemon_reload: true

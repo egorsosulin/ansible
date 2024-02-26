@@ -1,0 +1,6 @@
+---
+- name: Update Bat Cache
+  become: true
+  become_user: "{{ user }}"
+  ansible.builtin.command:
+    cmd: "/usr/bin/bat cache --build"

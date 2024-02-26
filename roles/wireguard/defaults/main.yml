@@ -1,0 +1,13 @@
+---
+
+wireguard_interface_pre_up: []
+wireguard_interface_post_up: []
+wireguard_interface_pre_down: []
+wireguard_interface_post_down: []
+
+wireguard_peers: []
+
+wireguard_systemd_service: "wg-quick@{{ wireguard_interface_name }}.service"
+
+wireguard_config_dir: /etc/wireguard
+wireguard_config_file: '{{ wireguard_config_dir }}/{{ wireguard_interface_name }}.conf'

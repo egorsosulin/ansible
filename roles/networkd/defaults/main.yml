@@ -1,0 +1,5 @@
+---
+
+networkd_service: 'systemd-networkd.service'
+networkd_network: []
+networkd_network_configs_dir: '/etc/systemd/network'

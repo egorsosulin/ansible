@@ -1,0 +1,15 @@
+---
+
+- name: Verify that required parameters are set
+  ansible.builtin.assert:
+    that:
+      - hosts_include is defined
+      - hosts_include | length > 0
+
+- name: Add data to hosts file
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "{{ item.hostname }}$"
+    line: "{{ item.ip }}  {{ item.hostname }}"
+  when: item.hostname != ansible_hostname
+  loop: "{{ hosts_include | list }}"

@@ -1,0 +1,18 @@
+---
+source_directories:
+  - {{ borgbackup_source }}
+repositories:
+  - path: {{ borgbackup_repo }}
+{% if borgbackup_password != "none" %}
+encryption_passphrase: "{{ borgbackup_password }}"
+{% endif %}
+compression: {{ borgbackup_compression }}
+relocated_repo_access_is_ok: true
+extra_borg_options:
+  init: --make-parent-dirs
+keep_daily: 7
+keep_weekly: 4
+keep_monthly: 24
+checks:
+  - name: repository
+    frequency: 2 weeks

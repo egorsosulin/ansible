@@ -1,0 +1,14 @@
+---
+
+- name: Reload Journald
+  ansible.builtin.systemd:
+    name: systemd-journald.service
+    state: restarted
+  notify: Remove Journald logfiles
+
+- name: Remove Journald logfiles
+  ansible.builtin.file:
+    path: /var/log/journal
+    state: absent
+  when:
+    - journald_storage == "volatile"

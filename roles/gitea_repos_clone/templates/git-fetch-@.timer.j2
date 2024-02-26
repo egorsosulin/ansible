@@ -1,0 +1,11 @@
+[Unit]
+Description=Run fetch in git repo
+Documentation=man:git
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=4h
+Persistent=false
+
+[Install]
+WantedBy=timers.target
